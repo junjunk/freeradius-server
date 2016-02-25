@@ -81,20 +81,40 @@ void request_stats_final(REQUEST *request)
 	if (request->reply && (request->packet->code != PW_STATUS_SERVER)) switch (request->reply->code) {
 	case PW_AUTHENTICATION_ACK:
 		INC_AUTH(total_responses);
+		INC_AUTH(last_responses);
 		INC_AUTH(total_access_accepts);
                 INC_AUTH_TIMING((fr_uint_t)(request->reply->timestamp - request->packet->timestamp));
+#ifdef DEBUG
+                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - packet timestamp %lu", 
+                        request->reply->timestamp, request->packet->timestamp);
+                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - parent timestamp %lu", 
+                        request->reply->timestamp, request->parent->timestamp);
+#endif
 		break;
 
 	case PW_AUTHENTICATION_REJECT:
 		INC_AUTH(total_responses);
+		INC_AUTH(last_responses);
 		INC_AUTH(total_access_rejects);
                 INC_AUTH_TIMING((fr_uint_t)(request->reply->timestamp - request->packet->timestamp));
+#ifdef DEBUG
+                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - packet timestamp %lu", 
+                        request->reply->timestamp, request->packet->timestamp);
+                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - parent timestamp %lu", 
+                        request->reply->timestamp, request->parent->timestamp);
+#endif
 		break;
 
 	case PW_ACCESS_CHALLENGE:
 		INC_AUTH(total_responses);
 		INC_AUTH(total_access_challenges);
                 INC_AUTH_TIMING((fr_uint_t)(request->reply->timestamp - request->packet->timestamp));
+#ifdef DEBUG
+                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - packet timestamp %lu", 
+                        request->reply->timestamp, request->packet->timestamp);
+                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - parent timestamp %lu", 
+                        request->reply->timestamp, request->parent->timestamp);
+#endif
 		break;
 
 #ifdef WITH_ACCOUNTING
