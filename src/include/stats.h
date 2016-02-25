@@ -50,6 +50,9 @@ typedef struct fr_stats_t {
 	fr_uint_t		total_packets_dropped;
 	fr_uint_t		total_no_records;
 	fr_uint_t		total_unknown_types;
+        //junk request time statistics
+        fr_uint_t               last_responses;
+        fr_uint_t               last_responses_time;
 } fr_stats_t;
 
 typedef struct fr_stats_ema_t {

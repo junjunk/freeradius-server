@@ -64,7 +64,8 @@ void request_stats_final(REQUEST *request)
 
 #undef INC_AUTH
 #define INC_AUTH(_x) radius_auth_stats._x++;request->listener->stats._x++;if (request->client && request->client->auth) request->client->auth->_x++;
-
+#undef INC_AUTH_TIMING
+#define INC_AUTH_TIMING(time) radius_auth_stats.last_responses_time += time;
 
 #undef INC_ACCT
 #define INC_ACCT(_x) radius_acct_stats._x++;request->listener->stats._x++;if (request->client && request->client->acct) request->client->acct->_x++
@@ -81,16 +82,19 @@ void request_stats_final(REQUEST *request)
 	case PW_AUTHENTICATION_ACK:
 		INC_AUTH(total_responses);
 		INC_AUTH(total_access_accepts);
+                INC_AUTH_TIMING((fr_uint_t)(request->reply->timestamp - request->packet->timestamp));
 		break;
 
 	case PW_AUTHENTICATION_REJECT:
 		INC_AUTH(total_responses);
 		INC_AUTH(total_access_rejects);
+                INC_AUTH_TIMING((fr_uint_t)(request->reply->timestamp - request->packet->timestamp));
 		break;
 
 	case PW_ACCESS_CHALLENGE:
 		INC_AUTH(total_responses);
 		INC_AUTH(total_access_challenges);
+                INC_AUTH_TIMING((fr_uint_t)(request->reply->timestamp - request->packet->timestamp));
 		break;
 
 #ifdef WITH_ACCOUNTING
@@ -206,6 +210,8 @@ static fr_stats2vp authvp[] = {
 	{ 135, offsetof(fr_stats_t, total_bad_authenticators) },
 	{ 136, offsetof(fr_stats_t, total_packets_dropped) },
 	{ 137, offsetof(fr_stats_t, total_unknown_types) },
+	{ 181, offsetof(fr_stats_t, last_responses) },
+	{ 182, offsetof(fr_stats_t, last_responses_time) },
 	{ 0, 0 }
 };
 
@@ -304,6 +310,11 @@ static void request_stats_addvp(REQUEST *request,
 	}
 }
 
+static void radius_stats_clear(fr_stats_t *stats)
+{
+    stats->last_responses = 0;
+    stats->last_responses_time = 0;
+}
 
 void request_stats_reply(REQUEST *request)
 {
@@ -324,6 +335,8 @@ void request_stats_reply(REQUEST *request)
 	if (((flag->vp_integer & 0x01) != 0) &&
 	    ((flag->vp_integer & 0xc0) == 0)) {
 		request_stats_addvp(request, authvp, &radius_auth_stats);
+                //junk request time stats
+                radius_stats_clear(&radius_auth_stats);
 	}
 		
 #ifdef WITH_ACCOUNTING
