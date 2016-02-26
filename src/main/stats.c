@@ -1,7 +1,7 @@
 /*
  * stats.c	Internal statistics handling.
  *
- * Version:	$Id$
+ * Version:	$Id: 8a0dbdb6b87475ad58eb09234951f55251e6cb5b $
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  */
 
 #include <freeradius-devel/ident.h>
-RCSID("$Id$")
+RCSID("$Id: 8a0dbdb6b87475ad58eb09234951f55251e6cb5b $")
 
 #include <freeradius-devel/radiusd.h>
 #include <freeradius-devel/rad_assert.h>
@@ -52,7 +52,8 @@ fr_stats_t proxy_acct_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 void request_stats_final(REQUEST *request)
 {
-	if (request->master_state == REQUEST_COUNTED) return;
+        struct timeval now;
+        if (request->master_state == REQUEST_COUNTED) return;
 
 	if ((request->listener->type != RAD_LISTEN_NONE) &&
 	    (request->listener->type != RAD_LISTEN_AUTH) &&
@@ -66,7 +67,8 @@ void request_stats_final(REQUEST *request)
 #define INC_AUTH(_x) radius_auth_stats._x++;request->listener->stats._x++;if (request->client && request->client->auth) request->client->auth->_x++;
 #undef INC_AUTH_TIMING
 #define INC_AUTH_TIMING(time) radius_auth_stats.last_responses_time += time;
-
+#undef TIMEVAL_DIFF
+#define TIMEVAL_DIFF(a,b) ((uint32_t)(a.tv_sec - b.tv_sec)*1000 + (uint32_t)((a.tv_usec - b.tv_usec) / 1000))
 #undef INC_ACCT
 #define INC_ACCT(_x) radius_acct_stats._x++;request->listener->stats._x++;if (request->client && request->client->acct) request->client->acct->_x++
 
@@ -78,17 +80,16 @@ void request_stats_final(REQUEST *request)
 	 *	deleted, because only the main server thread calls
 	 *	this function, which makes it thread-safe.
 	 */
+        gettimeofday(&now, NULL);
 	if (request->reply && (request->packet->code != PW_STATUS_SERVER)) switch (request->reply->code) {
 	case PW_AUTHENTICATION_ACK:
 		INC_AUTH(total_responses);
 		INC_AUTH(last_responses);
 		INC_AUTH(total_access_accepts);
-                INC_AUTH_TIMING((fr_uint_t)(request->reply->timestamp - request->packet->timestamp));
+                INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->received));
 #ifdef DEBUG
-                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - packet timestamp %lu", 
-                        request->reply->timestamp, request->packet->timestamp);
-                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - parent timestamp %lu", 
-                        request->reply->timestamp, request->parent->timestamp);
+                DEBUG("Stats: Accept reply time %lu milliseconds", 
+                        TIMEVAL_DIFF(now, request->received));
 #endif
 		break;
 
@@ -96,24 +97,20 @@ void request_stats_final(REQUEST *request)
 		INC_AUTH(total_responses);
 		INC_AUTH(last_responses);
 		INC_AUTH(total_access_rejects);
-                INC_AUTH_TIMING((fr_uint_t)(request->reply->timestamp - request->packet->timestamp));
+                INC_AUTH_TIMING((TIMEVAL_DIFF(now, request->received) - request->delay));
 #ifdef DEBUG
-                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - packet timestamp %lu", 
-                        request->reply->timestamp, request->packet->timestamp);
-                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - parent timestamp %lu", 
-                        request->reply->timestamp, request->parent->timestamp);
+                DEBUG("Stats: Reject reply time %lu milliseconds", 
+                        (TIMEVAL_DIFF(now, request->received) - request->delay));
 #endif
 		break;
 
 	case PW_ACCESS_CHALLENGE:
 		INC_AUTH(total_responses);
 		INC_AUTH(total_access_challenges);
-                INC_AUTH_TIMING((fr_uint_t)(request->reply->timestamp - request->packet->timestamp));
+                INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->received));
 #ifdef DEBUG
-                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - packet timestamp %lu", 
-                        request->reply->timestamp, request->packet->timestamp);
-                fprintf(fr_log_fp, "Stats: Reply timestamp %lu - parent timestamp %lu", 
-                        request->reply->timestamp, request->parent->timestamp);
+                DEBUG("Stats: Challenge reply time %lu milliseconds", 
+                        TIMEVAL_DIFF(now, request->received));
 #endif
 		break;
 
