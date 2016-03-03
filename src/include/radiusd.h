@@ -235,6 +235,7 @@ struct auth_req {
 
 	struct timeval		received;
 	struct timeval		when; 		/* to wake up */
+        struct timeval          responce_ready; /* time when get resutl before delay */
 	int			delay;
 
 	int			master_state;

@@ -2508,7 +2508,7 @@ static void request_post_handler(REQUEST *request)
 					     "Post-Auth-Type", "Reject",
 					     T_OP_SET);
 			if (vp) rad_postauth(request);
-
+                        gettimeofday(&request->responce_ready, NULL);
 			/*
 			 *	If configured, delay Access-Reject packets.
 			 *

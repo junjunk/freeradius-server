@@ -1,7 +1,7 @@
 /*
  * stats.c	Internal statistics handling.
  *
- * Version:	$Id: 8a0dbdb6b87475ad58eb09234951f55251e6cb5b $
+ * Version:	$Id$
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  */
 
 #include <freeradius-devel/ident.h>
-RCSID("$Id: 8a0dbdb6b87475ad58eb09234951f55251e6cb5b $")
+RCSID("$Id$")
 
 #include <freeradius-devel/radiusd.h>
 #include <freeradius-devel/rad_assert.h>
@@ -97,10 +97,10 @@ void request_stats_final(REQUEST *request)
 		INC_AUTH(total_responses);
 		INC_AUTH(last_responses);
 		INC_AUTH(total_access_rejects);
-                INC_AUTH_TIMING((TIMEVAL_DIFF(now, request->received) - request->delay));
+                INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->responce_ready));
 #ifdef DEBUG
                 DEBUG("Stats: Reject reply time %lu milliseconds", 
-                        (TIMEVAL_DIFF(now, request->received) - request->delay));
+                        (TIMEVAL_DIFF(now, request->responce_ready)));
 #endif
 		break;
 
