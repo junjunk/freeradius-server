@@ -1,7 +1,7 @@
 /*
  * stats.c	Internal statistics handling.
  *
- * Version:	$Id$
+ * Version:	$Id: 8a0dbdb6b87475ad58eb09234951f55251e6cb5b $
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
  */
 
 #include <freeradius-devel/ident.h>
-RCSID("$Id$")
+RCSID("$Id: 8a0dbdb6b87475ad58eb09234951f55251e6cb5b $")
 
 #include <freeradius-devel/radiusd.h>
 #include <freeradius-devel/rad_assert.h>
@@ -38,7 +38,7 @@ RCSID("$Id$")
 static struct timeval	start_time;
 static struct timeval	hup_time;
 
-fr_stats_t radius_auth_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+fr_stats_t radius_auth_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #ifdef WITH_ACCOUNTING
 fr_stats_t radius_acct_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #endif
@@ -71,6 +71,8 @@ void request_stats_final(REQUEST *request)
 #define TIMEVAL_DIFF(a,b) ((uint32_t)(a.tv_sec - b.tv_sec)*1000 + (uint32_t)((a.tv_usec - b.tv_usec) / 1000))
 #undef INC_ACCT
 #define INC_ACCT(_x) radius_acct_stats._x++;request->listener->stats._x++;if (request->client && request->client->acct) request->client->acct->_x++
+#undef AVG_AUTH_TIMING
+#define AVG_AUTH_TIMING radius_auth_stats.last_avg_response_time = radius_auth_stats.last_responses > 0 ? radius_auth_stats.last_responses_time / radius_auth_stats.last_responses : 0       
 
 	/*
 	 *	Update the statistics.
@@ -87,6 +89,7 @@ void request_stats_final(REQUEST *request)
 		INC_AUTH(last_responses);
 		INC_AUTH(total_access_accepts);
                 INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->received));
+                AVG_AUTH_TIMING;
 #ifdef DEBUG
                 DEBUG("Stats: Accept reply time %lu milliseconds", 
                         TIMEVAL_DIFF(now, request->received));
@@ -98,6 +101,7 @@ void request_stats_final(REQUEST *request)
 		INC_AUTH(last_responses);
 		INC_AUTH(total_access_rejects);
                 INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->responce_ready));
+                AVG_AUTH_TIMING;
 #ifdef DEBUG
                 DEBUG("Stats: Reject reply time %lu milliseconds", 
                         (TIMEVAL_DIFF(now, request->responce_ready)));
@@ -108,6 +112,7 @@ void request_stats_final(REQUEST *request)
 		INC_AUTH(total_responses);
 		INC_AUTH(total_access_challenges);
                 INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->received));
+                AVG_AUTH_TIMING;
 #ifdef DEBUG
                 DEBUG("Stats: Challenge reply time %lu milliseconds", 
                         TIMEVAL_DIFF(now, request->received));
@@ -229,6 +234,7 @@ static fr_stats2vp authvp[] = {
 	{ 137, offsetof(fr_stats_t, total_unknown_types) },
 	{ 181, offsetof(fr_stats_t, last_responses) },
 	{ 182, offsetof(fr_stats_t, last_responses_time) },
+	{ 183, offsetof(fr_stats_t, last_avg_response_time) },
 	{ 0, 0 }
 };
 

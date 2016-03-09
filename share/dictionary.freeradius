@@ -3,7 +3,7 @@
 #
 #	The FreeRADIUS Vendor-Specific dictionary.
 #
-# Version:	$Id$
+# Version:	$Id: be5971dd345aa5cbbe119734da0f58ee45b471d7 $
 #
 #	For a complete list of Private Enterprise Codes, see:
 #
@@ -137,5 +137,6 @@ ATTRIBUTE	FreeRADIUS-Server-EMA-USEC-Window-10	180	integer
 
 ATTRIBUTE	FreeRADIUS-Total-Auth-Last-Responses	181	integer
 ATTRIBUTE	FreeRADIUS-Total-Auth-Last-Responses-Time	182	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Last-AVG-Response-Time	183	integer
 
 END-VENDOR FreeRADIUS
