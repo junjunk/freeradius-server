@@ -135,8 +135,11 @@ ATTRIBUTE	FreeRADIUS-Server-EMA-Window		178	integer
 ATTRIBUTE	FreeRADIUS-Server-EMA-USEC-Window-1	179	integer
 ATTRIBUTE	FreeRADIUS-Server-EMA-USEC-Window-10	180	integer
 
-ATTRIBUTE	FreeRADIUS-Total-Auth-Last-Responses	181	integer
-ATTRIBUTE	FreeRADIUS-Total-Auth-Last-Responses-Time	182	integer
-ATTRIBUTE	FreeRADIUS-Total-Auth-Last-AVG-Response-Time	183	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Last-Responses-Accept	181	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Last-Responses-Accept-Time	182	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Last-AVG-Response-Accept-Time	183	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Last-Responses-Reject	184	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Last-Responses-Reject-Time	185	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Last-AVG-Response-Reject-Time	186	integer
 
 END-VENDOR FreeRADIUS
