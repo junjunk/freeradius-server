@@ -38,15 +38,15 @@ RCSID("$Id: 8a0dbdb6b87475ad58eb09234951f55251e6cb5b $")
 static struct timeval	start_time;
 static struct timeval	hup_time;
 
-fr_stats_t radius_auth_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+fr_stats_t radius_auth_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #ifdef WITH_ACCOUNTING
-fr_stats_t radius_acct_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+fr_stats_t radius_acct_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #endif
 
 #ifdef WITH_PROXY
-fr_stats_t proxy_auth_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+fr_stats_t proxy_auth_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #ifdef WITH_ACCOUNTING
-fr_stats_t proxy_acct_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+fr_stats_t proxy_acct_stats = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 #endif
 #endif
 
@@ -66,13 +66,13 @@ void request_stats_final(REQUEST *request)
 #undef INC_AUTH
 #define INC_AUTH(_x) radius_auth_stats._x++;request->listener->stats._x++;if (request->client && request->client->auth) request->client->auth->_x++;
 #undef INC_AUTH_TIMING
-#define INC_AUTH_TIMING(time) radius_auth_stats.last_responses_time += time;
+#define INC_AUTH_TIMING(val, type) radius_auth_stats.last_responses_time_##type += val;
 #undef TIMEVAL_DIFF
 #define TIMEVAL_DIFF(a,b) ((uint32_t)(a.tv_sec - b.tv_sec)*1000 + (uint32_t)((a.tv_usec - b.tv_usec) / 1000))
 #undef INC_ACCT
 #define INC_ACCT(_x) radius_acct_stats._x++;request->listener->stats._x++;if (request->client && request->client->acct) request->client->acct->_x++
 #undef AVG_AUTH_TIMING
-#define AVG_AUTH_TIMING radius_auth_stats.last_avg_response_time = radius_auth_stats.last_responses > 0 ? radius_auth_stats.last_responses_time / radius_auth_stats.last_responses : 0       
+#define AVG_AUTH_TIMING(type) radius_auth_stats.last_avg_response_time_##type = radius_auth_stats.last_responses_##type > 0 ? radius_auth_stats.last_responses_time_##type / radius_auth_stats.last_responses_##type : 0       
 
 	/*
 	 *	Update the statistics.
@@ -86,24 +86,24 @@ void request_stats_final(REQUEST *request)
 	if (request->reply && (request->packet->code != PW_STATUS_SERVER)) switch (request->reply->code) {
 	case PW_AUTHENTICATION_ACK:
 		INC_AUTH(total_responses);
-		INC_AUTH(last_responses);
+		INC_AUTH(last_responses_accept);
 		INC_AUTH(total_access_accepts);
-                INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->received));
-                AVG_AUTH_TIMING;
+                INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->received),accept);
+                AVG_AUTH_TIMING(accept);
 #ifdef DEBUG
-                DEBUG("Stats: Accept reply time %lu milliseconds", 
+                DEBUG("Stats: Accept reply time %u milliseconds", 
                         TIMEVAL_DIFF(now, request->received));
 #endif
 		break;
 
 	case PW_AUTHENTICATION_REJECT:
 		INC_AUTH(total_responses);
-		INC_AUTH(last_responses);
+		INC_AUTH(last_responses_reject);
 		INC_AUTH(total_access_rejects);
-                INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->responce_ready));
-                AVG_AUTH_TIMING;
+                INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->responce_ready), reject);
+                AVG_AUTH_TIMING(reject);
 #ifdef DEBUG
-                DEBUG("Stats: Reject reply time %lu milliseconds", 
+                DEBUG("Stats: Reject reply time %u milliseconds", 
                         (TIMEVAL_DIFF(now, request->responce_ready)));
 #endif
 		break;
@@ -111,10 +111,10 @@ void request_stats_final(REQUEST *request)
 	case PW_ACCESS_CHALLENGE:
 		INC_AUTH(total_responses);
 		INC_AUTH(total_access_challenges);
-                INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->received));
-                AVG_AUTH_TIMING;
+                //INC_AUTH_TIMING(TIMEVAL_DIFF(now, request->received));
+                //AVG_AUTH_TIMING;
 #ifdef DEBUG
-                DEBUG("Stats: Challenge reply time %lu milliseconds", 
+                DEBUG("Stats: Challenge reply time %u milliseconds", 
                         TIMEVAL_DIFF(now, request->received));
 #endif
 		break;
@@ -232,9 +232,12 @@ static fr_stats2vp authvp[] = {
 	{ 135, offsetof(fr_stats_t, total_bad_authenticators) },
 	{ 136, offsetof(fr_stats_t, total_packets_dropped) },
 	{ 137, offsetof(fr_stats_t, total_unknown_types) },
-	{ 181, offsetof(fr_stats_t, last_responses) },
-	{ 182, offsetof(fr_stats_t, last_responses_time) },
-	{ 183, offsetof(fr_stats_t, last_avg_response_time) },
+	{ 181, offsetof(fr_stats_t, last_responses_accept) },
+	{ 182, offsetof(fr_stats_t, last_responses_time_accept) },
+	{ 183, offsetof(fr_stats_t, last_avg_response_time_accept) },
+	{ 184, offsetof(fr_stats_t, last_responses_reject) },
+	{ 185, offsetof(fr_stats_t, last_responses_time_reject) },
+	{ 186, offsetof(fr_stats_t, last_avg_response_time_reject) },
 	{ 0, 0 }
 };
 
@@ -335,8 +338,10 @@ static void request_stats_addvp(REQUEST *request,
 
 static void radius_stats_clear(fr_stats_t *stats)
 {
-    stats->last_responses = 0;
-    stats->last_responses_time = 0;
+    stats->last_responses_accept = 0;
+    stats->last_responses_time_accept = 0;
+    stats->last_responses_reject = 0;
+    stats->last_responses_time_reject = 0;
 }
 
 void request_stats_reply(REQUEST *request)
