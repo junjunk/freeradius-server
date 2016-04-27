@@ -51,9 +51,12 @@ typedef struct fr_stats_t {
 	fr_uint_t		total_no_records;
 	fr_uint_t		total_unknown_types;
         //junk request time statistics
-        fr_uint_t               last_responses;
-        fr_uint_t               last_responses_time;
-        fr_uint_t               last_avg_response_time;
+        fr_uint_t               last_responses_accept;
+        fr_uint_t               last_responses_time_accept;
+        fr_uint_t               last_avg_response_time_accept;
+        fr_uint_t               last_responses_reject;
+        fr_uint_t               last_responses_time_reject;
+        fr_uint_t               last_avg_response_time_reject;
 } fr_stats_t;
 
 typedef struct fr_stats_ema_t {
